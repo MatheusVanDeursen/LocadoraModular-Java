@@ -1,0 +1,19 @@
+# Arquivos compilados (Java)
+*.class
+
+# Arquivos de log
+*.log
+
+# Pastas de saída de compilação do Eclipse
+/bin/
+/build/
+
+# Arquivos de configuração específicos do Eclipse (não subir!)
+.settings/
+.project
+.classpath
+.metadata/
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db

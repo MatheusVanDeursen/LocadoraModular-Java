@@ -1,0 +1,226 @@
+-- Criação do Banco e Configuração de Caracteres
+CREATE DATABASE IF NOT EXISTS locadora_veiculos
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE locadora_veiculos;
+
+-- -----------------------------------------------------
+-- 1. TABELA: filiais
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS filiais (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL, 
+    cnpj VARCHAR(18) NOT NULL UNIQUE,         -- Tamanho exato: XX.XXX.XXX/XXXX-XX
+    cidade VARCHAR(50) NOT NULL,
+    estado CHAR(2) NOT NULL                   -- Fixo em 2 caracteres (UF)
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- 2. TABELA: clientes
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
+    sobrenome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    cpf VARCHAR(14) NOT NULL UNIQUE,          -- Tamanho exato: XXX.XXX.XXX-XX
+    senha_hash VARCHAR(255) NOT NULL,         -- 255 é o padrão seguro para hashes como BCrypt/Argon2
+    telefone VARCHAR(20),                     -- 20 permite códigos de país (ex: +55 11 99999-9999)
+    data_nascimento DATE,
+    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- 3. TABELA: cnhs
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS cnhs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL UNIQUE,
+    numero_registro VARCHAR(20) NOT NULL UNIQUE, -- 20 atende CNHs BR e internacionais
+    categoria VARCHAR(5) NOT NULL,               -- Ex: 'B', 'AB', 'ACC'
+    data_validade DATE NOT NULL,
+    data_primeira_habilitacao DATE NOT NULL,
+    
+    CONSTRAINT fk_cnh_cliente 
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) 
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- 4. TABELA: enderecos
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS enderecos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL UNIQUE,
+    cep VARCHAR(10) NOT NULL,                    -- Ex: XXXXX-XXX
+    logradouro VARCHAR(100) NOT NULL,
+    numero VARCHAR(10) NOT NULL,                 -- Alterado para VARCHAR para aceitar "S/N", "10-A"
+    complemento VARCHAR(100),
+    bairro VARCHAR(50) NOT NULL,
+    cidade VARCHAR(50) NOT NULL,
+    estado CHAR(2) NOT NULL,
+    
+    CONSTRAINT fk_endereco_cliente 
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) 
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- 5. TABELA: veiculos
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS veiculos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    placa VARCHAR(10) NOT NULL UNIQUE,           -- 10 cobre padrão antigo e Mercosul com folga
+    marca VARCHAR(50) NOT NULL,
+    modelo VARCHAR(50) NOT NULL,
+    cor VARCHAR(30),
+    
+    filial_atual_id INT NOT NULL,
+    tipo ENUM('HATCH', 'SEDAN', 'SUV', 'MOTO', 'UTILITARIO') DEFAULT 'HATCH',
+    transmissao ENUM('MANUAL', 'AUTOMATICO') DEFAULT 'MANUAL',
+    grupo_cnh_necessario VARCHAR(2) DEFAULT 'B', 
+    capacidade_passageiros INT DEFAULT 5,
+    capacidade_malas INT DEFAULT 2,
+    km_atual INT NOT NULL DEFAULT 0,
+    
+    ano_fabricacao INT NOT NULL,
+    valor_diaria DECIMAL(10, 2) NOT NULL,        -- DECIMAL para precisão financeira
+    status ENUM('DISPONIVEL', 'ALUGADO', 'MANUTENCAO', 'INATIVO') DEFAULT 'DISPONIVEL',
+    
+    CONSTRAINT fk_veiculo_filial 
+        FOREIGN KEY (filial_atual_id) REFERENCES filiais(id)
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------
+-- 6. TABELA: locacoes
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS locacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    veiculo_id INT NOT NULL,
+    
+    filial_retirada_id INT NOT NULL,
+    filial_devolucao_prevista_id INT NOT NULL,
+    filial_devolucao_real_id INT NULL,
+    
+    data_retirada DATETIME NOT NULL,
+    data_devolucao_prevista DATETIME NOT NULL,
+    data_devolucao_real DATETIME NULL,  
+    data_cancelamento DATETIME NULL,    
+    
+    km_inicial INT NULL,
+    km_final INT NULL,
+    
+    valor_total DECIMAL(10, 2),
+    status ENUM('ABERTA', 'FINALIZADA', 'CANCELADA') DEFAULT 'ABERTA',
+
+    CONSTRAINT fk_locacao_cliente FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_locacao_veiculo FOREIGN KEY (veiculo_id) REFERENCES veiculos(id) ON UPDATE CASCADE,
+    CONSTRAINT fk_locacao_retirada FOREIGN KEY (filial_retirada_id) REFERENCES filiais(id),
+    CONSTRAINT fk_locacao_dev_prev FOREIGN KEY (filial_devolucao_prevista_id) REFERENCES filiais(id),
+    CONSTRAINT fk_locacao_dev_real FOREIGN KEY (filial_devolucao_real_id) REFERENCES filiais(id)
+) ENGINE=InnoDB;
+
+-- Criação de índices para acelerar pesquisas
+CREATE INDEX idx_cliente_nome ON clientes(nome);
+CREATE INDEX idx_veiculo_modelo ON veiculos(modelo);
+CREATE INDEX idx_locacao_datas ON locacoes(data_retirada, data_devolucao_prevista);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- =====================================================
+-- INSERÇÃO DE FILIAIS (Incluindo unidades no mesmo estado)
+-- =====================================================
+INSERT INTO filiais (nome, cnpj, cidade, estado) VALUES 
+('Matriz São Paulo', '11.111.111/0001-11', 'São Paulo', 'SP'),
+('Filial Rio de Janeiro', '11.111.111/0002-22', 'Rio de Janeiro', 'RJ'),
+('Filial Belo Horizonte', '11.111.111/0003-33', 'Belo Horizonte', 'MG'),
+('Filial Curitiba', '11.111.111/0004-44', 'Curitiba', 'PR'),
+('Filial Porto Alegre', '11.111.111/0005-55', 'Porto Alegre', 'RS'),
+('Filial Brasília', '11.111.111/0006-66', 'Brasília', 'DF'),
+('Filial Salvador', '11.111.111/0007-77', 'Salvador', 'BA'),
+('Filial Recife', '11.111.111/0008-88', 'Recife', 'PE'),
+('Filial Fortaleza', '11.111.111/0009-99', 'Fortaleza', 'CE'),
+('Filial Manaus', '11.111.111/0010-10', 'Manaus', 'AM'),
+('Filial Campinas', '11.111.111/0011-11', 'Campinas', 'SP'),
+('Filial Niterói', '11.111.111/0012-12', 'Niterói', 'RJ'),
+('Filial Uberlândia', '11.111.111/0013-13', 'Uberlândia', 'MG');
+
+-- =====================================================
+-- INSERÇÃO DE VEÍCULOS (Lote Adicional)
+-- =====================================================
+
+-- HATCH
+INSERT INTO veiculos (placa, marca, modelo, cor, filial_atual_id, tipo, transmissao, grupo_cnh_necessario, capacidade_passageiros, capacidade_malas, km_atual, ano_fabricacao, valor_diaria, status) VALUES 
+('ABC-1010', 'Fiat', 'Mobi', 'Branco', 1, 'HATCH', 'MANUAL', 'B', 5, 1, 15000, 2023, 90.00, 'DISPONIVEL'),
+('XYZ-2020', 'Renault', 'Kwid', 'Prata', 2, 'HATCH', 'MANUAL', 'B', 5, 1, 22000, 2022, 85.00, 'DISPONIVEL'),
+('HGB-3030', 'VW', 'Polo', 'Preto', 1, 'HATCH', 'AUTOMATICO', 'B', 5, 2, 8000, 2024, 130.00, 'DISPONIVEL'),
+('HTH-1122', 'Hyundai', 'HB20', 'Azul', 3, 'HATCH', 'MANUAL', 'B', 5, 2, 12000, 2023, 110.00, 'DISPONIVEL'),
+('HTH-3344', 'Chevrolet', 'Onix', 'Branco', 4, 'HATCH', 'AUTOMATICO', 'B', 5, 2, 5000, 2024, 145.00, 'DISPONIVEL'),
+('HTH-5566', 'Peugeot', '208', 'Cinza', 11, 'HATCH', 'AUTOMATICO', 'B', 5, 2, 9500, 2023, 135.00, 'DISPONIVEL'),
+('ALU-0303', 'Hyundai', 'HB20', 'Prata', 1, 'HATCH', 'MANUAL', 'B', 5, 2, 11000, 2023, 105.00, 'ALUGADO'),
+('HTC-7788', 'Toyota', 'Yaris Hatch', 'Vermelho', 11, 'HATCH', 'AUTOMATICO', 'B', 5, 2, 6000, 2024, 160.00, 'DISPONIVEL'),
+('HTC-9900', 'Honda', 'City Hatch', 'Cinza', 12, 'HATCH', 'AUTOMATICO', 'B', 5, 2, 4500, 2024, 175.00, 'DISPONIVEL');
+
+-- SEDAN
+INSERT INTO veiculos (placa, marca, modelo, cor, filial_atual_id, tipo, transmissao, grupo_cnh_necessario, capacidade_passageiros, capacidade_malas, km_atual, ano_fabricacao, valor_diaria, status) VALUES 
+('SED-4040', 'Toyota', 'Corolla', 'Prata', 1, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 35000, 2022, 220.00, 'DISPONIVEL'),
+('CHE-5050', 'Chevrolet', 'Onix Plus', 'Azul', 4, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 12000, 2023, 170.00, 'DISPONIVEL'),
+('SED-1111', 'Honda', 'City', 'Branco', 2, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 15000, 2023, 185.00, 'DISPONIVEL'),
+('SED-2222', 'Nissan', 'Versa', 'Preto', 6, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 21000, 2022, 160.00, 'DISPONIVEL'),
+('SED-3333', 'VW', 'Virtus', 'Azul Marinho', 13, 'SEDAN', 'MANUAL', 'B', 5, 3, 8500, 2024, 175.00, 'DISPONIVEL'),
+('SED-9999', 'BMW', '320i', 'Branco', 1, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 4000, 2024, 450.00, 'DISPONIVEL'),
+('MAN-0404', 'Honda', 'Civic', 'Preto', 2, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 50000, 2020, 190.00, 'MANUTENCAO'),
+('SED-5577', 'Mercedes', 'C180', 'Prata', 1, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 10000, 2023, 520.00, 'DISPONIVEL'),
+('SED-8811', 'Audi', 'A4', 'Cinza', 6, 'SEDAN', 'AUTOMATICO', 'B', 5, 3, 7500, 2024, 490.00, 'DISPONIVEL');
+
+-- SUV
+INSERT INTO veiculos (placa, marca, modelo, cor, filial_atual_id, tipo, transmissao, grupo_cnh_necessario, capacidade_passageiros, capacidade_malas, km_atual, ano_fabricacao, valor_diaria, status) VALUES 
+('JEP-6060', 'Jeep', 'Compass', 'Preto', 2, 'SUV', 'AUTOMATICO', 'B', 5, 4, 18000, 2023, 300.00, 'DISPONIVEL'),
+('VWT-7070', 'VW', 'T-Cross', 'Branco', 3, 'SUV', 'AUTOMATICO', 'B', 5, 3, 5000, 2024, 280.00, 'DISPONIVEL'),
+('SUV-1010', 'Hyundai', 'Creta', 'Prata', 8, 'SUV', 'AUTOMATICO', 'B', 5, 3, 14000, 2023, 260.00, 'DISPONIVEL'),
+('SUV-2020', 'Nissan', 'Kicks', 'Cinza', 9, 'SUV', 'AUTOMATICO', 'B', 5, 3, 19000, 2022, 240.00, 'DISPONIVEL'),
+('SUV-3030', 'Toyota', 'Corolla Cross', 'Preto', 6, 'SUV', 'AUTOMATICO', 'B', 5, 4, 11000, 2023, 320.00, 'DISPONIVEL'),
+('SUV-4040', 'Volvo', 'XC40 Recharge', 'Azul', 1, 'SUV', 'AUTOMATICO', 'B', 5, 3, 3000, 2024, 550.00, 'DISPONIVEL'),
+('SUV-5050', 'Jeep', 'Renegade', 'Laranja', 10, 'SUV', 'AUTOMATICO', 'B', 5, 2, 25000, 2022, 210.00, 'DISPONIVEL'),
+('SUV-9988', 'Land Rover', 'Evoque', 'Branco', 2, 'SUV', 'AUTOMATICO', 'B', 5, 4, 12000, 2023, 650.00, 'DISPONIVEL'),
+('SUV-7711', 'Chevrolet', 'Tracker', 'Vermelho', 12, 'SUV', 'AUTOMATICO', 'B', 5, 3, 9000, 2023, 220.00, 'DISPONIVEL'),
+('SUV-6622', 'Fiat', 'Fastback', 'Cinza', 13, 'SUV', 'AUTOMATICO', 'B', 5, 4, 3500, 2024, 250.00, 'DISPONIVEL');
+
+-- MOTO
+INSERT INTO veiculos (placa, marca, modelo, cor, filial_atual_id, tipo, transmissao, grupo_cnh_necessario, capacidade_passageiros, capacidade_malas, km_atual, ano_fabricacao, valor_diaria, status) VALUES 
+('MOT-8080', 'Honda', 'CG 160 Titan', 'Vermelho', 1, 'MOTO', 'MANUAL', 'A', 2, 0, 9000, 2023, 60.00, 'DISPONIVEL'),
+('YAM-9090', 'Yamaha', 'Fazer 250', 'Azul', 3, 'MOTO', 'MANUAL', 'A', 2, 0, 4500, 2024, 85.00, 'DISPONIVEL'),
+('MOT-1111', 'Honda', 'CB 500X', 'Verde', 7, 'MOTO', 'MANUAL', 'A', 2, 0, 3000, 2023, 150.00, 'DISPONIVEL'),
+('MOT-2222', 'BMW', 'G 310 GS', 'Branco', 6, 'MOTO', 'MANUAL', 'A', 2, 0, 2000, 2024, 180.00, 'DISPONIVEL'),
+('MOT-3333', 'Kawasaki', 'Ninja 400', 'Verde', 12, 'MOTO', 'MANUAL', 'A', 2, 0, 1500, 2024, 200.00, 'DISPONIVEL'),
+('MOT-4455', 'Ducati', 'Monster', 'Vermelho', 2, 'MOTO', 'MANUAL', 'A', 2, 0, 1200, 2024, 350.00, 'DISPONIVEL');
+
+-- UTILITARIO
+INSERT INTO veiculos (placa, marca, modelo, cor, filial_atual_id, tipo, transmissao, grupo_cnh_necessario, capacidade_passageiros, capacidade_malas, km_atual, ano_fabricacao, valor_diaria, status) VALUES 
+('STR-0101', 'Fiat', 'Strada', 'Branco', 11, 'UTILITARIO', 'MANUAL', 'B', 2, 5, 40000, 2022, 150.00, 'DISPONIVEL'),
+('VAN-0202', 'Mercedes', 'Sprinter', 'Branco', 1, 'UTILITARIO', 'MANUAL', 'D', 15, 6, 60000, 2021, 450.00, 'DISPONIVEL'),
+('UTI-1111', 'Toyota', 'Hilux CD', 'Prata', 8, 'UTILITARIO', 'AUTOMATICO', 'B', 5, 5, 22000, 2023, 400.00, 'DISPONIVEL'),
+('UTI-2222', 'Ford', 'Ranger', 'Preto', 10, 'UTILITARIO', 'AUTOMATICO', 'B', 5, 5, 15000, 2023, 380.00, 'DISPONIVEL'),
+('UTI-3333', 'Renault', 'Master', 'Branco', 5, 'UTILITARIO', 'MANUAL', 'B', 3, 10, 35000, 2022, 300.00, 'DISPONIVEL'),
+('UTI-4444', 'Mitsubishi', 'L200 Triton', 'Branco', 9, 'UTILITARIO', 'MANUAL', 'B', 5, 5, 18000, 2023, 350.00, 'DISPONIVEL'),
+('UTI-5599', 'Fiat', 'Toro', 'Marrom', 13, 'UTILITARIO', 'AUTOMATICO', 'B', 5, 4, 11000, 2024, 280.00, 'DISPONIVEL'),
+('UTI-7711', 'Volkswagen', 'Amarok', 'Azul', 4, 'UTILITARIO', 'AUTOMATICO', 'B', 5, 5, 13000, 2023, 420.00, 'DISPONIVEL');
