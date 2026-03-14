@@ -1,3 +1,5 @@
+-- Desenvolvido por @MatheusVanDeursen
+
 -- Criação do Banco e Configuração de Caracteres
 CREATE DATABASE IF NOT EXISTS locadora_veiculos
 CHARACTER SET utf8mb4
