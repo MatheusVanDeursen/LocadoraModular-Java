@@ -40,7 +40,7 @@ public class Login extends JFrame implements LoginInterface {
 
         JLabel emailLabel = new JLabel("Email:");
         emailLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-        emailLabel.setBounds(50, 70, 46, 14);
+        emailLabel.setBounds(50, 70, 384, 14);
         this.getContentPane().add(emailLabel);
         
         emailFiled = new JTextField();
@@ -49,7 +49,7 @@ public class Login extends JFrame implements LoginInterface {
         
         JLabel senhaLabel = new JLabel("Senha:");
         senhaLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-        senhaLabel.setBounds(50, 130, 46, 14);
+        senhaLabel.setBounds(50, 130, 384, 14);
         this.getContentPane().add(senhaLabel);
         
         senhaField = new JPasswordField();

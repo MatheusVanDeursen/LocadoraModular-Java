@@ -55,7 +55,7 @@ public class Menu extends JFrame implements MenuInterface {
         contentPane.add(subtituloLabel);
 
         JLabel ordenarLabel = new JLabel("Ordenar por:");
-        ordenarLabel.setBounds(406, 81, 80, 30);
+        ordenarLabel.setBounds(383, 81, 103, 30);
         contentPane.add(ordenarLabel);
 
         ordenacaoCombo = new JComboBox<>(new String[]{
@@ -146,7 +146,6 @@ public class Menu extends JFrame implements MenuInterface {
 
     @Override
     public void atualizarTabela(Object[][] dados) {
-        @SuppressWarnings("serial")
         DefaultTableModel model = new DefaultTableModel(dados, colunasTabela) {
             @Override
             public boolean isCellEditable(int row, int column){ return false; }
