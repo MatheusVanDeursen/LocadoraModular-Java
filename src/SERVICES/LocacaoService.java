@@ -77,6 +77,8 @@ public class LocacaoService {
         if (!cnh.getCategoria().contains(categoriaNecessaria)) {
             throw new RegraNegocioException("Categoria da CNH (" + cnh.getCategoria() + ") não permite conduzir este veículo (Exige: " + categoriaNecessaria + ").");
         }
+        
+        locacao.setKmInicial(veiculo.getKmAtual());
 
         //Regra 9: Cálculo financeiro
         long dias = ChronoUnit.DAYS.between(locacao.getDataRetirada().toLocalDate(), locacao.getDataDevolucaoPrevista().toLocalDate());

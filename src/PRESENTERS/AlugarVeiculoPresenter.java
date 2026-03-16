@@ -62,15 +62,10 @@ public class AlugarVeiculoPresenter {
     }
 
     private void prepararInventarioEFiliais() {
-        //1. Carrega as Filiais
         listaFiliais = filialService.listarTodas();
-        List<String> nomesFiliais = listaFiliais.stream()
-            .map(f -> f.getNome() + " (" + f.getEstado() + ")")
-            .collect(Collectors.toList());
-        
+        List<String> nomesFiliais = listaFiliais.stream().map(f -> f.getNome() + " (" + f.getEstado() + ")").collect(Collectors.toList());
         view.popularComboFiliais(nomesFiliais);
 
-        //2. Pré-seleciona a filial de origem baseada no estado do cliente
         Endereco end = enderecoService.buscarEnderecoPorIdCliente(clienteLogado.getId());
         if(end != null && end.getEstado() != null){
             for(int i = 0; i < listaFiliais.size(); i++){
@@ -81,7 +76,6 @@ public class AlugarVeiculoPresenter {
             }
         }
 
-        //3. Busca todos os veículos
         listaCompletaVeiculos = veiculoService.listarDisponiveis();
         filtrarCatalogo(); 
     }
@@ -89,6 +83,10 @@ public class AlugarVeiculoPresenter {
     public void filtrarCatalogo() {
         int idxOrigem = view.getFilialRetiradaIndex();
         if(listaCompletaVeiculos == null || listaFiliais == null || idxOrigem < 0) { return; }
+        
+        this.veiculoSelecionado = null; 
+        view.atualizarLabelCarroSelecionado("<html><h3 style='color:gray'>Selecione um veículo...</h3></html>");
+        view.travarPainelDireito(false, usuarioAptoParaAlugar);
 
         int idFilialOrigem = listaFiliais.get(idxOrigem).getId();
         String busca = view.getBuscaRapida().toLowerCase();
@@ -98,8 +96,7 @@ public class AlugarVeiculoPresenter {
 
         List<Veiculo> filtrados = listaCompletaVeiculos.stream()
             .filter(v -> v.getFilialAtualId() == idFilialOrigem) 
-            .filter(v -> busca.isEmpty() || v.getModelo().toLowerCase().contains(busca) || 
-                         v.getMarca().toLowerCase().contains(busca) || v.getPlaca().toLowerCase().contains(busca))
+            .filter(v -> busca.isEmpty() || v.getModelo().toLowerCase().contains(busca) || v.getMarca().toLowerCase().contains(busca) || v.getPlaca().toLowerCase().contains(busca))
             .filter(v -> cat.equals("Todas Categorias") || v.getTipo().name().equals(cat))
             .filter(v -> cam.equals("Qualquer Câmbio") || v.getTransmissao().name().equals(cam))
             .sorted((v1, v2) -> ordem == 0 ? v1.getValorDiaria().compareTo(v2.getValorDiaria()) : v2.getValorDiaria().compareTo(v1.getValorDiaria()))
@@ -160,7 +157,7 @@ public class AlugarVeiculoPresenter {
     }
 
     public void calcularEstimativaLocacao() {
-        if (veiculoSelecionado == null) { return; }
+        if(veiculoSelecionado == null) { return; }
         
         int idxFilialDev = view.getFilialDevolucaoIndex();
         if(idxFilialDev < 0) { return; }

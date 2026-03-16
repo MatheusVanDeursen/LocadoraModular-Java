@@ -66,6 +66,9 @@ public class MenuPresenter {
         try{
             this.listaLocacoesAtual = locacaoService.buscarHistorico(clienteLogado);
             aplicarOrdenacaoEAtualizarTabela();
+            if (this.listaLocacoesAtual != null) {
+                aplicarOrdenacaoEAtualizarTabela();
+            }
         }catch(Exception e){
             e.printStackTrace();
             view.exibirMensagem("Erro ao carregar histórico técnico.", "Erro", JOptionPane.ERROR_MESSAGE);

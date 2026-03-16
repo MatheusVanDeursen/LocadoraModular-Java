@@ -169,9 +169,9 @@ public class Menu extends JFrame implements MenuInterface {
                 lblVazio.setForeground(Color.GRAY);
                 lblVazio.setHorizontalAlignment(SwingConstants.CENTER);
                 lblVazio.setFont(new Font("Segoe UI", Font.ITALIC, 14));
-                viewport.add(lblVazio);
+                viewport.setView(lblVazio);
             } else {
-                viewport.add(tableHistorico);
+                viewport.setView(tableHistorico);
             }
             
             viewport.revalidate();

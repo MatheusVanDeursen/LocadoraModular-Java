@@ -40,9 +40,9 @@ public class LocacaoDAO {
      * @throws RuntimeException Encapsula a SQLException e faz o Rollback em caso de erro.
      */
     public void efetivarLocacao(Locacao locacao, int veiculoId) {
-        String sqlInsertLocacao = "INSERT INTO locacoes (cliente_id, veiculo_id, filial_retirada_id, filial_devolucao_prevista_id, " +
-                                  "data_retirada, data_devolucao_prevista, status, valor_total) " +
-                                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    	String sqlInsertLocacao = "INSERT INTO locacoes (cliente_id, veiculo_id, filial_retirada_id, filial_devolucao_prevista_id, " +
+                				"data_retirada, data_devolucao_prevista, status, valor_total, km_inicial) " +
+                				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         String sqlUpdateVeiculo = "UPDATE veiculos SET status = 'ALUGADO' WHERE id = ?";
 
@@ -60,6 +60,7 @@ public class LocacaoDAO {
                 stmtLoc.setTimestamp(6, Timestamp.valueOf(locacao.getDataDevolucaoPrevista()));
                 stmtLoc.setString(7, locacao.getStatus().name());
                 stmtLoc.setBigDecimal(8, locacao.getValorTotal());
+                stmtLoc.setInt(9, locacao.getKmInicial());
                 stmtLoc.executeUpdate();
 
                 stmtVei.setInt(1, veiculoId);
