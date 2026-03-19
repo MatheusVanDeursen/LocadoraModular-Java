@@ -74,23 +74,38 @@ Essas decisões visam facilitar manutenção, testes unitários e evolução do 
 
 ## Screenshots
 
-### Tela de Login
-![Tela de Login](locadora_screenshots/login.png)
-
-### Cadastro de Clientes
-![Tela de Cadastro](locadora_screenshots/cadastro.png)
-
-### Menu Principal
-![Menu Principal](locadora_screenshots/menu.png)
-
-### Consulta de Dados
-![Dados Cadastrais](locadora_screenshots/dados.png)
-
-### Registro de Locação
-![Menu de Locação](locadora_screenshots/locacao.png)
-
-### Menu de Locações
-![Registro de Locação](locadora_screenshots/menu_locacao.png)
+<table>
+  <tr>
+    <td align="center">
+      <b>Tela de Login</b><br>
+      <img src="locadora_screenshots/login.png" alt="Tela de Login" width="400">
+    </td>
+    <td align="center">
+      <b>Cadastro de Clientes</b><br>
+      <img src="locadora_screenshots/cadastro.png" alt="Tela de Cadastro" width="400">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Menu Principal</b><br>
+      <img src="locadora_screenshots/menu.png" alt="Menu Principal" width="400">
+    </td>
+    <td align="center">
+      <b>Consulta de Dados</b><br>
+      <img src="locadora_screenshots/dados.png" alt="Dados Cadastrais" width="400">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>Simulação de Locação</b><br>
+      <img src="locadora_screenshots/locacao.png" alt="Menu de Locação" width="400">
+    </td>
+    <td align="center">
+      <b>Histórico de Locações</b><br>
+      <img src="locadora_screenshots/menu_locacao.png" alt="Registro de Locação" width="400">
+    </td>
+  </tr>
+</table>
 
 
 ---
