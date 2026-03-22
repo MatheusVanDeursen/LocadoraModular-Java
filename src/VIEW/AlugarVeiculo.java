@@ -127,7 +127,23 @@ public class AlugarVeiculo extends JDialog implements AlugarVeiculoInterface {
         scrollPane.setBounds(15, 115, 610, 490);
         catalagoPanel.add(scrollPane);
 
-        tabelaVeiculos = new JTable();
+        tabelaVeiculos = new JTable() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (getRowCount() == 0) {
+                    Graphics2D g2d = (Graphics2D) g;
+                    g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    g2d.setColor(new Color(150, 0, 0));
+                    g2d.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                    String text = "Não há veículos disponíveis nesta filial com os filtros selecionados.";
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int x = (getWidth() - fm.stringWidth(text)) / 2;
+                    int y = (getHeight() / 2) + (fm.getAscent() / 2);
+                    g2d.drawString(text, x, y);
+                }
+            }
+        };
         tabelaVeiculos.setRowHeight(45); 
         tabelaVeiculos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabelaVeiculos.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -266,17 +282,6 @@ public class AlugarVeiculo extends JDialog implements AlugarVeiculoInterface {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
         tabelaVeiculos.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-        
-        // --- LÓGICA DE MENSAGEM VAZIA ---
-        if (dados.length == 0) {
-            JLabel lblVazio = new JLabel("Não há veículos disponíveis nesta filial com os filtros selecionados.");
-            lblVazio.setForeground(new Color(150, 0, 0));
-            lblVazio.setHorizontalAlignment(SwingConstants.CENTER);
-            lblVazio.setFont(new Font("Segoe UI", Font.BOLD, 13));
-            tabelaVeiculos.getParent().add(lblVazio);
-        } else {
-            tabelaVeiculos.getParent().revalidate();
-        }
     }
 
     @Override public void atualizarLabelCarroSelecionado(String html) { carroSelecionadoLabel.setText(html); }

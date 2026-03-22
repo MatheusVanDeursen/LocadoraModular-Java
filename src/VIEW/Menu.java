@@ -144,7 +144,8 @@ public class Menu extends JFrame implements MenuInterface {
         return JOptionPane.showOptionDialog(this, mensagem, titulo, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
     }
 
-    @Override
+    @SuppressWarnings("serial")
+	@Override
     public void atualizarTabela(Object[][] dados) {
         DefaultTableModel model = new DefaultTableModel(dados, colunasTabela) {
             @Override
