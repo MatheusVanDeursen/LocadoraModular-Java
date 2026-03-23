@@ -114,7 +114,7 @@ Essas decisões visam facilitar manutenção, testes unitários e evolução do 
 
 Confira o funcionamento do sistema e a explicação detalhada da arquitetura no link abaixo:
 
-[Assistir apresentação do projeto no YouTube](link) (Será adicionado em breve!)
+[Assistir apresentação do projeto no YouTube](https://youtu.be/PgPuUfnGVI8)
 
 ---
 Desenvolvido por **Matheus Van Deursen**.
